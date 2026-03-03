@@ -69,6 +69,16 @@ class Record:
 
 
 class AddressBook(UserDict):
+
+    def is_leap_year(self, year: int) -> bool:
+        return (year % 4 == 0 and (year % 100 != 0 or year % 400 == 0))
+
+    def adjust_for_leap_year(self, birthday: datetime.date, year: int) -> datetime.date:
+        if birthday.month == 2 and birthday.day == 29:
+            if not self.is_leap_year(year):
+                return datetime(year, 2, 28).date()
+        return birthday
+
     def add_record(self, record):
         self.data[record.name.value] = record
 
@@ -90,10 +100,16 @@ class AddressBook(UserDict):
                 continue
 
             birthday = record.birthday.value
-            birthday_this_year = birthday.replace(year=today.year)
+            try:
+                birthday_this_year = birthday.replace(year=today.year)
+            except ValueError:
+                birthday_this_year = self.adjust_for_leap_year(birthday, today.year)
 
             if birthday_this_year < today:
-                birthday_this_year = birthday_this_year.replace(year=today.year + 1)
+                try:
+                    birthday_this_year = birthday_this_year.replace(year=today.year + 1)
+                except ValueError:
+                    birthday_this_year = self.adjust_for_leap_year(birthday, today.year + 1)
 
             delta_days = (birthday_this_year - today).days
 
