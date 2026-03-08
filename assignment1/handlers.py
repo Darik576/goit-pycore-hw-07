@@ -1,5 +1,4 @@
 from models import Record, AddressBook
-from typing import List, Optional
 
 
 def input_error(func):
@@ -12,13 +11,11 @@ def input_error(func):
             return "Enter the argument for the command."
         except KeyError:
             return "Contact not found."
-        except Exception as e:
-            return f"Unexpected error: {e}"
     return inner
 
 
 @input_error
-def add_contact(args: List[str], book: AddressBook) -> str:
+def add_contact(args, book: AddressBook):
     name, phone, *_ = args
     record = book.find(name)
     message = "Contact updated."
@@ -33,7 +30,7 @@ def add_contact(args: List[str], book: AddressBook) -> str:
 
 
 @input_error
-def change_contact(args: List[str], book: AddressBook) -> str:
+def change_contact(args, book: AddressBook):
     name, old_phone, new_phone = args
     record = book.find(name)
     if record is None:
@@ -43,7 +40,7 @@ def change_contact(args: List[str], book: AddressBook) -> str:
 
 
 @input_error
-def show_phone(args: List[str], book: AddressBook) -> str:
+def show_phone(args, book: AddressBook):
     name = args[0]
     record = book.find(name)
     if record is None:
@@ -52,14 +49,14 @@ def show_phone(args: List[str], book: AddressBook) -> str:
 
 
 @input_error
-def show_all(book: AddressBook) -> str:
+def show_all(book: AddressBook):
     if not book.data:
         return "No contacts saved."
     return "\n".join(str(record) for record in book.data.values())
 
 
 @input_error
-def add_birthday(args: List[str], book: AddressBook) -> str:
+def add_birthday(args, book: AddressBook):
     name, birthday = args
     record = book.find(name)
     if record is None:
@@ -69,7 +66,7 @@ def add_birthday(args: List[str], book: AddressBook) -> str:
 
 
 @input_error
-def show_birthday(args: List[str], book: AddressBook) -> str:
+def show_birthday(args, book: AddressBook):
     name = args[0]
     record = book.find(name)
     if record is None:
@@ -80,7 +77,7 @@ def show_birthday(args: List[str], book: AddressBook) -> str:
 
 
 @input_error
-def birthdays(args: List[str], book: AddressBook) -> str:
+def birthdays(args, book: AddressBook):
     upcoming = book.get_upcoming_birthdays()
     if not upcoming:
         return "No birthdays in the next 7 days."
