@@ -1,12 +1,13 @@
 from collections import UserDict
-from datetime import datetime, timedelta
+from datetime import datetime, date, timedelta
+from typing import Optional
 
 
 class Field:
     def __init__(self, value):
         self.value = value
 
-    def __str__(self):
+    def __str__(self) -> str:
         return str(self.value)
 
 
@@ -15,83 +16,74 @@ class Name(Field):
 
 
 class Phone(Field):
-    def __init__(self, value):
+    def __init__(self, value: str):
         if not value.isdigit() or len(value) != 10:
             raise ValueError("Phone number must contain exactly 10 digits")
         super().__init__(value)
 
 
 class Birthday(Field):
-    def __init__(self, value):
+    def __init__(self, value: str):
         try:
             date_obj = datetime.strptime(value, "%d.%m.%Y").date()
             super().__init__(date_obj)
         except ValueError:
             raise ValueError("Invalid date format. Use DD.MM.YYYY")
-        
+
 
 class Record:
-    def __init__(self, name):
+    def __init__(self, name: str):
         self.name = Name(name)
-        self.phones = []
-        self.birthday = None
+        self.phones: list[Phone] = []
+        self.birthday: Optional[Birthday] = None
 
-    def add_phone(self, phone):
+    def add_phone(self, phone: str) -> None:
         self.phones.append(Phone(phone))
 
-    def remove_phone(self, phone):
+    def remove_phone(self, phone: str) -> None:
         for p in self.phones:
             if p.value == phone:
                 self.phones.remove(p)
                 return
         raise ValueError("Phone not found")
 
-    def edit_phone(self, old_phone, new_phone):
+    def edit_phone(self, old_phone: str, new_phone: str) -> None:
         for p in self.phones:
             if p.value == old_phone:
                 p.value = Phone(new_phone).value
                 return
         raise ValueError("Phone not found")
 
-    def find_phone(self, phone):
+    def find_phone(self, phone: str) -> Optional[str]:
         for p in self.phones:
             if p.value == phone:
                 return p.value
         return None
 
-    def __str__(self):
+    def add_birthday(self, birthday: str) -> None:
+        self.birthday = Birthday(birthday)
+
+    def __str__(self) -> str:
         phones_str = "; ".join(p.value for p in self.phones)
         bday = self.birthday.value.strftime("%d.%m.%Y") if self.birthday else "—"
         return f"Contact name: {self.name.value}, phones: {phones_str}, birthday: {bday}"
-    
-    def add_birthday(self, birthday):
-        self.birthday = Birthday(birthday)
 
 
 class AddressBook(UserDict):
 
-    def is_leap_year(self, year: int) -> bool:
-        return (year % 4 == 0 and (year % 100 != 0 or year % 400 == 0))
-
-    def adjust_for_leap_year(self, birthday: datetime.date, year: int) -> datetime.date:
-        if birthday.month == 2 and birthday.day == 29:
-            if not self.is_leap_year(year):
-                return datetime(year, 2, 28).date()
-        return birthday
-
-    def add_record(self, record):
+    def add_record(self, record: Record) -> None:
         self.data[record.name.value] = record
 
-    def find(self, name):
+    def find(self, name: str) -> Optional[Record]:
         return self.data.get(name)
 
-    def delete(self, name):
+    def delete(self, name: str) -> None:
         if name in self.data:
             del self.data[name]
         else:
             raise KeyError("Contact not found")
-        
-    def get_upcoming_birthdays(self):
+
+    def get_upcoming_birthdays(self) -> list:
         today = datetime.today().date()
         upcoming = []
 
@@ -99,17 +91,18 @@ class AddressBook(UserDict):
             if record.birthday is None:
                 continue
 
-            birthday = record.birthday.value
+            birthday: date = record.birthday.value
+
             try:
                 birthday_this_year = birthday.replace(year=today.year)
             except ValueError:
-                birthday_this_year = self.adjust_for_leap_year(birthday, today.year)
+                birthday_this_year = date(today.year, 2, 28)
 
             if birthday_this_year < today:
                 try:
-                    birthday_this_year = birthday_this_year.replace(year=today.year + 1)
+                    birthday_this_year = birthday.replace(year=today.year + 1)
                 except ValueError:
-                    birthday_this_year = self.adjust_for_leap_year(birthday, today.year + 1)
+                    birthday_this_year = date(today.year + 1, 2, 28)
 
             delta_days = (birthday_this_year - today).days
 
